@@ -1,0 +1,4 @@
+package com.example.gestore_prenotazioni.user;
+
+public class UserService {
+}

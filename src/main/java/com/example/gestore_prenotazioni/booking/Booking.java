@@ -1,7 +1,7 @@
 package com.example.gestore_prenotazioni.booking;
 
+import com.example.gestore_prenotazioni.auth.AppUser;
 import com.example.gestore_prenotazioni.room.Room;
-import com.example.gestore_prenotazioni.user.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -25,7 +25,7 @@ public class Booking {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    private User user;
+    private AppUser AppUser;
 
     @ManyToOne
     @JoinColumn(name = "room_id")

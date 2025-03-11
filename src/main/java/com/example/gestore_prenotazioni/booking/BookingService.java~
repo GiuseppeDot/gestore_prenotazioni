@@ -75,7 +75,7 @@ public class BookingService {
         return bookingRepository.findByAppUserIdAndDates(appUserId, checkInDate, checkOutDate, pageable);
     }
 
-
+    
 
     // Cancella una prenotazione
     public void cancelBooking(Long bookingId) {

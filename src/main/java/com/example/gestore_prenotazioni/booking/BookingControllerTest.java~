@@ -1,0 +1,34 @@
+package com.example.gestore_prenotazioni.booking;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
+@Autowired
+private MockMvc mockMvc;
+
+@MockBean
+private BookingService bookingService;
+
+@Test
+void getBookingsByAppUserWithFilters_Success() throws Exception {
+    Long appUserId = 1L;
+    LocalDate checkInDate = LocalDate.now();
+    LocalDate checkOutDate = LocalDate.now().plusDays(5);
+    PageRequest pageable = PageRequest.of(0, 10);
+
+    Booking booking = new Booking();
+    booking.setId(1L);
+
+    Page<Booking> expectedPage = new PageImpl<>(Collections.singletonList(booking));
+
+    when(bookingService.getBookingsByAppUserIdAndDates(appUserId, checkInDate, checkOutDate, pageable))
+            .thenReturn(expectedPage);
+
+    mockMvc.perform(get("/api/bookings/user/{appUserId}/page", appUserId)
+                    .param("checkInDate", checkInDate.toString())
+                    .param("checkOutDate", checkOutDate.toString())
+                    .param("page", "0")
+                    .param("size", "10"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content[0].id").value(1L));
+}
+}

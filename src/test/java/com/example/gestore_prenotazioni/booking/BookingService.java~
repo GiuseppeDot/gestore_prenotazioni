@@ -1,0 +1,152 @@
+package com.example.gestore_prenotazioni.booking;
+
+import org.mockito.Mock;
+import org.mockito.InjectMocks;
+import org.mockito.MockitoAnnotations;
+import com.example.gestore_prenotazioni.auth.AppUser;
+import com.example.gestore_prenotazioni.auth.AppUserRepository;
+import com.example.gestore_prenotazioni.room.Room;
+import com.example.gestore_prenotazioni.room.RoomRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.util.Collections;
+import java.util.List;
+
+@Service
+public class BookingService {
+
+    // autowired serve per iniettare le dipendenze
+    @Autowired
+    private BookingRepository bookingRepository;
+
+    @Autowired
+    private AppUserRepository userRepository;
+
+    @Autowired
+    private RoomRepository roomRepository;
+
+    // metodo per creare una prenotazione
+    public Booking createBooking(
+            Long userId,
+            Long roomId,
+            LocalDate checkInDate,
+            LocalDate checkOutDate
+    ) {
+        AppUser AppUser = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Utente non trovato"));
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new RuntimeException("Camera non trovata"));
+        // Controlla se la camera è disponibile
+        if (!room.isAvailable()) {
+            throw new RuntimeException("Camera non disponibile");
+        }
+
+        Booking booking = new Booking();
+        booking.setAppUser(AppUser);
+        booking.setRoom(room);
+        booking.setCheckInDate(checkInDate);
+        booking.setCheckOutDate(checkOutDate);
+
+        room.setAvailable(false); // Imposta la camera come non disponibile
+        roomRepository.save(room);
+
+        return bookingRepository.save(booking);
+    }
+
+    // metodo per ottenere le prenotazioni di un utente
+    public List<Booking> getBookingsByAppUserId(Long appUserId) {
+        return bookingRepository.findByAppUserId(appUserId);
+    }
+
+    // metodo per ottenere le prenotazioni di un utente con paginazione
+    public Page<Booking> getBookingsByAppUserId(Long appUserId, Pageable pageable) {
+        return bookingRepository.findByAppUserId(appUserId, pageable);
+    }
+
+    public Page<Booking> getBookingByAppUserIdAndDates(
+            Long appUserId,
+            LocalDate checkInDate,
+            LocalDate checkOutDate,
+            Pageable pageable
+    ) {
+        return bookingRepository.findByAppUserIdAndDates(appUserId, checkInDate, checkOutDate, pageable);
+    }
+
+    // metodo per cancellare una prenotazione
+    public void cancelBooking(Long bookingId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Prenotazione non trovata"));
+
+        Room room = booking.getRoom();
+        room.setAvailable(true); // Rendi la camera nuovamente disponibile
+        roomRepository.save(room);
+
+        bookingRepository.delete(booking);
+    }
+    class BookingServiceTest {
+
+        @Mock
+        private BookingRepository bookingRepository;
+
+        @InjectMocks
+        private BookingService bookingService;
+
+        @BeforeEach
+        void setUp() {
+            MockitoAnnotations.openMocks(this); // Inizializza i mock
+        }
+
+        @Test
+        void getBookingByAppUserIdAndDates_Success() {
+            // Dati di input
+            Long appUserId = 1L;
+            LocalDate checkInDate = LocalDate.of(2023, 10, 1);
+            LocalDate checkOutDate = LocalDate.of(2023, 10, 10);
+            Pageable pageable = PageRequest.of(0, 10);
+
+            // Mock della risposta del repository
+            Booking booking = new Booking();
+            booking.setId(1L);
+            Page<Booking> expectedPage = new PageImpl<>(Collections.singletonList(booking));
+
+            // Simula il comportamento del repository
+            when(bookingRepository.findByAppUserIdAndDates(appUserId, checkInDate, checkOutDate, pageable))
+                    .thenReturn(expectedPage);
+
+            // Chiamata al metodo da testare
+            Page<Booking> result = bookingService.getBookingByAppUserIdAndDates(appUserId, checkInDate, checkOutDate, pageable);
+
+            // Verifica il risultato
+            assertEquals(1, result.getTotalElements()); // Verifica che ci sia un elemento nella pagina
+            assertEquals(1L, result.getContent().get(0).getId()); // Verifica l'ID della prenotazione
+        }
+
+        @Test
+        void getBookingByAppUserIdAndDates_NoResults() {
+            // Dati di input
+            Long appUserId = 1L;
+            LocalDate checkInDate = LocalDate.of(2023, 10, 1);
+            LocalDate checkOutDate = LocalDate.of(2023, 10, 10);
+            Pageable pageable = PageRequest.of(0, 10);
+
+            // Mock della risposta del repository (nessun risultato)
+            Page<Booking> expectedPage = new PageImpl<>(Collections.emptyList());
+
+            // Simula il comportamento del repository
+            when(bookingRepository.findByAppUserIdAndDates(appUserId, checkInDate, checkOutDate, pageable))
+                    .thenReturn(expectedPage);
+
+            // Chiamata al metodo da testare
+            Page<Booking> result = bookingService.getBookingByAppUserIdAndDates(appUserId, checkInDate, checkOutDate, pageable);
+
+            // Verifica il risultato
+            assertEquals(0, result.getTotalElements()); // Verifica che non ci siano elementi nella pagina
+        }
+    }
+}

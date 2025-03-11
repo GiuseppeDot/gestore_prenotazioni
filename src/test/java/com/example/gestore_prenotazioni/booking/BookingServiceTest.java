@@ -2,6 +2,8 @@ package com.example.gestore_prenotazioni.booking;
 
 import com.example.gestore_prenotazioni.auth.AppUser;
 import com.example.gestore_prenotazioni.auth.AppUserRepository;
+import com.example.gestore_prenotazioni.booking.Booking;
+import com.example.gestore_prenotazioni.booking.BookingRepository;
 import com.example.gestore_prenotazioni.room.Room;
 import com.example.gestore_prenotazioni.room.RoomRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,59 +15,56 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Service
-public class BookingService {
+public class BookingServiceTest {
 
-    // Iniezione delle dipendenze
+    // autowired serve per iniettare le dipendenze
     @Autowired
     private BookingRepository bookingRepository;
 
     @Autowired
-    private AppUserRepository appUserRepository;
+    private AppUserRepository userRepository;
 
     @Autowired
     private RoomRepository roomRepository;
 
-    // Crea una nuova prenotazione
-    public Booking createBooking(Long userId, Long roomId, LocalDate checkInDate, LocalDate checkOutDate) {
-        // Verifica che l'utente esista
-        AppUser appUser = appUserRepository.findById(userId)
+    // metodo per creare una prenotazione
+    public Booking createBooking(
+            Long userId,
+            Long roomId,
+            LocalDate checkInDate,
+            LocalDate checkOutDate
+    ) {
+        AppUser AppUser = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Utente non trovato"));
-
-        // Verifica che la camera esista
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new RuntimeException("Camera non trovata"));
-
-        // Verifica che la camera sia disponibile
+        // Controlla se la camera è disponibile
         if (!room.isAvailable()) {
             throw new RuntimeException("Camera non disponibile");
         }
 
-        // Crea la prenotazione
         Booking booking = new Booking();
-        booking.setAppUser(appUser);
+        booking.setAppUser(AppUser);
         booking.setRoom(room);
         booking.setCheckInDate(checkInDate);
         booking.setCheckOutDate(checkOutDate);
 
-        // Imposta la camera come non disponibile
-        room.setAvailable(false);
+        room.setAvailable(false); // Imposta la camera come non disponibile
         roomRepository.save(room);
 
-        // Salva la prenotazione nel database
         return bookingRepository.save(booking);
     }
 
-    // Ottiene le prenotazioni di un utente
+    // metodo per ottenere le prenotazioni di un utente
     public List<Booking> getBookingsByAppUserId(Long appUserId) {
         return bookingRepository.findByAppUserId(appUserId);
     }
 
-  // Ottiene le prenotazioni di un utente con paginazione
+    // metodo per ottenere le prenotazioni di un utente con paginazione
     public Page<Booking> getBookingsByAppUserId(Long appUserId, Pageable pageable) {
         return bookingRepository.findByAppUserId(appUserId, pageable);
     }
 
- // Ottiene le prenotazioni di un utente con paginazione e filtro di date
     public Page<Booking> getBookingByAppUserIdAndDates(
             Long appUserId,
             LocalDate checkInDate,
@@ -75,20 +74,15 @@ public class BookingService {
         return bookingRepository.findByAppUserIdAndDates(appUserId, checkInDate, checkOutDate, pageable);
     }
 
-
-
-    // Cancella una prenotazione
+    // metodo per cancellare una prenotazione
     public void cancelBooking(Long bookingId) {
-        // Trova la prenotazione
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Prenotazione non trovata"));
 
-        // Rendi la camera nuovamente disponibile
         Room room = booking.getRoom();
-        room.setAvailable(true);
+        room.setAvailable(true); // Rendi la camera nuovamente disponibile
         roomRepository.save(room);
 
-        // Cancella la prenotazione
         bookingRepository.delete(booking);
     }
 }

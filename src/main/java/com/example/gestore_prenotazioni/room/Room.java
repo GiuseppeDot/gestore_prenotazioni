@@ -27,4 +27,6 @@ public class Room {
     private Double price;
 
     private boolean isAvailable = true;
+
+    private String imageUrl;
 }

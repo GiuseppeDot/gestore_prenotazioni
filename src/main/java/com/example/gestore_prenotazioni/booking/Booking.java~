@@ -25,7 +25,7 @@ public class Booking {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    private AppUser appUserId;
+    private AppUser appUser;
 
     @ManyToOne
     @JoinColumn(name = "room_id")

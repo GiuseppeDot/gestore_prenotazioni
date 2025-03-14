@@ -45,6 +45,10 @@ public class RoomService {
         }
     }
 
+    public Room saveRoom(Room room) {
+        return roomRepository.save(room);
+    }
+
     public Room updateRoomImage(Long roomId, String imageUrl) {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new RuntimeException("Camera non trovata"));

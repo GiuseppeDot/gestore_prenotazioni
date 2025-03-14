@@ -4,6 +4,7 @@ import com.example.gestore_prenotazioni.auth.AppUser;
 import com.example.gestore_prenotazioni.auth.AppUserRepository;
 import com.example.gestore_prenotazioni.room.Room;
 import com.example.gestore_prenotazioni.room.RoomRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,15 +30,15 @@ public class BookingService {
     public Booking createBooking(Long userId, Long roomId, LocalDate checkInDate, LocalDate checkOutDate) {
         // Verifica che l'utente esista
         AppUser appUser = appUserRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Utente non trovato"));
+                .orElseThrow(() -> new EntityNotFoundException("Utente non trovato"));
 
         // Verifica che la camera esista
         Room room = roomRepository.findById(roomId)
-                .orElseThrow(() -> new RuntimeException("Camera non trovata"));
+                .orElseThrow(() -> new EntityNotFoundException("Camera non trovata"));
 
         // Verifica che la camera sia disponibile
         if (!room.isAvailable()) {
-            throw new RuntimeException("Camera non disponibile");
+            throw new EntityNotFoundException("Camera non disponibile");
         }
 
         // Crea la prenotazione

@@ -17,6 +17,13 @@ public class RoomService {
     @Autowired
     private RoomRepository roomRepository;
 
+    @Autowired
+    private RoomMapper roomMapper;
+
+    public Room createRoom(RoomRequestDTO roomDTO) {
+        Room room = roomMapper.toEntity(roomDTO);
+        return roomRepository.save(room);
+    }
     public Page<Room> searchRooms(
             String type,
             Double minPrice,

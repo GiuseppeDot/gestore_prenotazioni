@@ -14,6 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 // endpoint per ottenere tutte le stanze
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/rooms")
 public class RoomController {
@@ -32,10 +33,10 @@ public class RoomController {
     @ApiResponse(responseCode = "400", description = "Parametri non validi")
     public ResponseEntity<Room> createRoom(
             @Parameter(description = "Dati della stanza", required = true)
-            @Valid @RequestBody Room roomRequest
+            @Valid @RequestBody RoomRequestDTO roomDTO
     ) {
-        Room savedRoom = roomService.saveRoom(roomRequest);
-        return new ResponseEntity<>(savedRoom, HttpStatus.CREATED);
+        Room newRoom = roomService.createRoom(roomDTO);
+        return new ResponseEntity<>(newRoom, HttpStatus.CREATED);
     }
 
 

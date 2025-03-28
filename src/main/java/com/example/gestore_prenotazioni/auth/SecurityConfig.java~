@@ -42,8 +42,6 @@ public class SecurityConfig {
         // Aggiungi il filtro JWT per validare i token
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
-        http.authorizeHttpRequests(req -> req.requestMatchers("/**").permitAll());
-
         return http.build();
     }
 
